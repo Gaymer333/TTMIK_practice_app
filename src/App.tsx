@@ -1,66 +1,45 @@
-import { Button, Card, CardActions, CardContent } from '@material-ui/core';
-import SaveIcon from '@material-ui/icons/Save';
-import GTranslateIcon from '@material-ui/icons/GTranslate';
+import { Button, Card, CardContent } from '@material-ui/core';
+import GitHubIcon from '@material-ui/icons/GitHub';
 import './App.scss';
 import { useState } from 'react';
+import Exercise from './component/exercise';
 
-type DictionaryExercise = {
-  english: string
-  hangul: string
-}
 
-type DictionaryLesson = {
-  lessonNumber: number
-  exercises: Array<DictionaryExercise>
+export enum ProgramStatus {
+  MainMenu,
+  Running,
+  Done,
 }
 
 function App() {
 
-  const [front, setFront] = useState(false)
-  const [currentExercise, setCurrentExercise] = useState<DictionaryExercise | undefined>(undefined)
+  const [status, setStatus] = useState<ProgramStatus>(ProgramStatus.MainMenu)
 
-  const _dictionary: Array<DictionaryLesson> = [
-    {
-      lessonNumber: 1,
-      exercises: [
-        {english: "Hello", hangul: "안녕하세요"},
-        {english: "Thank you", hangul: "감사합니다"}
-      ]
+  const AppCardContent = () => {
+    switch (status) {
+      case ProgramStatus.MainMenu:
+        return <>
+          <Button variant="contained" onClick={() => { setStatus(ProgramStatus.Running) }}>Start</Button>
+        </>
+      case ProgramStatus.Running:
+        return <Exercise setProgramStatus={(status) => setStatus(status)} />
+      case ProgramStatus.Done:
+        return <>
+          <p>Done</p>
+          <Button variant="contained" onClick={() => setStatus(ProgramStatus.MainMenu)}>Restart</Button>
+        </>
     }
-  ]
-
-  const dictionary: Array<DictionaryExercise> = _dictionary.flatMap(lesson => lesson.exercises)
-
-  const setExercise = () => {
-    setCurrentExercise(dictionary[Math.floor(Math.random() * dictionary.length)])
   }
-
-  if (currentExercise === undefined) setExercise()
 
   return <>
     <Card id="mainCard" variant="outlined">
       <CardContent>
-        {
-          currentExercise
-          ?
-            <>
-              <h1>Please translate this word:</h1>
-              <h1>{currentExercise.english}</h1>
-              <div className="answerWrapper">
-                <div className={front ? "answer flipped" : "answer"} onClick={() => { setFront(!front) }}>
-                  <p className="answerText">Click here to see the answer</p>
-                </div>
-                <div className={front ? "answer back" : "answer back flipped"}>
-                  <p className="answerText">{currentExercise.hangul}</p>
-                </div>
-              </div>
-            </>
-          :
-            <h1>Loading...</h1>
-        }
-        
+        <AppCardContent />
+
       </CardContent>
     </Card>
+    <p>Made by Peter Andresen</p>
+    <a className="githubLink" href="https://github.com/Gaymer333" target="_blank" ><GitHubIcon /></a>
   </>
 }
 

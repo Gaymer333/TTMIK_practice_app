@@ -3,8 +3,9 @@ html {
     height: 100%;
 
     body {
-        #root {    
+        #root {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             min-width: 100%;
             min-height: 100vh;
@@ -17,7 +18,7 @@ html {
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                        
+
                 width: 400px;
                 height: 400px;
 
@@ -29,7 +30,8 @@ html {
                     align-items: center;
                     justify-content: center;
 
-                    h1 {
+                    h1,
+                    h2 {
                         margin: 0;
                     }
 
@@ -44,11 +46,14 @@ html {
                             border-radius: 20px;
                             box-shadow: 0px 3px 8px 1px #737ecf85;
                             display: flex;
+                            flex-direction: column;
+                            align-items: center;
                             justify-content: center;
                             transition: transform 0.6s;
                             transform-style: preserve-3d;
                             transform: rotateY(0deg);
                             backface-visibility: hidden;
+                            cursor: pointer;
 
                             &.back {
                                 position: absolute;
@@ -64,6 +69,46 @@ html {
                                 margin: 0;
                                 align-items: center;
                             }
+
+                            .answerSubText {
+                                margin: 0;
+                                color: gray;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .githubLink {
+                color: black
+            }
+        }
+
+        .lessonDialogBox {
+            .MuiDialog-container .MuiPaper-root {
+                min-width: 360px;
+                min-height: 360px;
+                padding: 15px;
+                display: flex;
+
+                h1 {
+                    margin-top: 0;
+                    align-self: center;
+                }
+
+                .lessons {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    flex-grow: 1;
+
+                    .lessonItem {
+                        display: flex;
+
+                        p {
+                            margin: 0;
+                            display: flex;
+                            align-items: center;
                         }
                     }
                 }
