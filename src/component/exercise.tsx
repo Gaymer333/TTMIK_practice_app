@@ -86,7 +86,7 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
     };
 
     const makeExercisesReady = () => {
-        const exercises = lessons.flatMap(lesson => lesson.exercises)
+        const exercises = lessons.filter(lesson => lesson.seleted).flatMap(lesson => lesson.exercises)
         setToDoExercises(exercises)
         setTotalNumbersOfExercises(exercises.length)
         setStatus(ExerciseProgramStatus.FetchFirstExercises)
@@ -105,21 +105,20 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
     }
 
     const changeCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const localLessons = [...lessons]
         const lessonNumber = event?.target.parentElement?.parentElement?.getAttribute("data-lesson-number")
         const checked = event?.target.checked
-        if (lessonNumber && typeof checked === "boolean") {
-            const lessonAsNumber = parseInt(lessonNumber)
-            //// FROM HERE!!!!!!!!!
-        }
-        else {
-            console.error("'lessonNumber' or 'checked' was not currect value")
-        }
+        if (!lessonNumber || typeof checked !== "boolean") throw new Error("'lessonNumber' or 'checked' was not currect value");
+        const lessonToChange = localLessons.find(lesson => lesson.lessonNumber === parseInt(lessonNumber) )
+        if (!lessonToChange) throw new Error("Could not find lesson by lessonNumber");
+        lessonToChange.seleted = checked
+        setLessons(localLessons)
     }
 
     if (status === ExerciseProgramStatus.Setup) {
         return <>
             <h1>Setup</h1>
-            <Button variant="contained" onClick={openLessonsOverview} >Pick lessons</Button>
+            <Button className="pickLessonBtn" variant="contained" onClick={openLessonsOverview} >Pick lessons</Button>
             <Dialog className="lessonDialogBox" open={showLessonsOverview}>
                 <h1>Pick lessons</h1>
                 <span className="lessons" >
@@ -134,7 +133,10 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
                 </span>
                 <Button variant="contained" onClick={closeLessonsOverview} >Back</Button>
             </Dialog>
-            <Button variant="contained" onClick={() => setStatus(ExerciseProgramStatus.MakeExercises)} >Go!</Button>
+            <h2>Current seleted:</h2>
+            <p>{lessons.filter(lesson => lesson.seleted).length} lessons.</p>
+            <p>{lessons.filter(lesson => lesson.seleted).flatMap(lesson => lesson.exercises).length} words.</p>
+            <Button className="goBtn" variant="contained" onClick={() => setStatus(ExerciseProgramStatus.MakeExercises)} disabled={!lessons.some(lesson => lesson.seleted)} >Go!</Button>
         </>
     }
     else if (status === ExerciseProgramStatus.MakeExercises) {
@@ -159,7 +161,7 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
                         <p className="answerSubText">Click to hide</p>
                     </div>
                 </div>
-                <Button variant="contained" onClick={() => { fetchNextExercise() }}>New word</Button>
+                <Button variant="contained" onClick={() => { fetchNextExercise() }}>{toDoExercises.length ? "New word" : "Finnish"}</Button>
             </>
         } else {
             return <p>Loading...</p>
