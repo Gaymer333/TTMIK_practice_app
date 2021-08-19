@@ -39,7 +39,7 @@ function App() {
       </CardContent>
     </Card>
     <p>Made by Peter Andresen</p>
-    <a className="githubLink" href="https://github.com/Gaymer333" target="_blank" ><GitHubIcon /></a>
+    <a className="githubLink" rel="noreferrer" href="https://github.com/Gaymer333" target="_blank" ><GitHubIcon /></a>
   </>
 }
 

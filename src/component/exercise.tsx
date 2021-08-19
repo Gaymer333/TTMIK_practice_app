@@ -1,6 +1,7 @@
 import { Button, Dialog, Checkbox } from "@material-ui/core";
 import { useState } from "react";
 import { ProgramStatus } from "../App";
+import SubdirectoryArrowRightIcon from '@material-ui/icons/SubdirectoryArrowRight';
 
 export enum ExerciseProgramStatus {
     Setup,
@@ -11,14 +12,15 @@ export enum ExerciseProgramStatus {
 }
 
 type DictionaryExercise = {
+    seleted: boolean
     english: string
     hangul: string
 }
 
 type DictionaryLesson = {
     lessonNumber: number
-    seleted: boolean
     exercises: Array<DictionaryExercise>
+    sideExercises?: Array<DictionaryExercise>
 }
 
 type ExerciseArg = {
@@ -30,53 +32,99 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
     const _lessons: Array<DictionaryLesson> = [
         {
             lessonNumber: 1,
-            seleted: true,
             exercises: [
-                { english: "Hello", hangul: "안녕하세요" },
-                { english: "Thank you", hangul: "감사합니다" }
+                { english: "Hello", hangul: "안녕하세요", seleted: true },
+                { english: "Thank you", hangul: "감사합니다", seleted: true }
             ]
         },
         {
             lessonNumber: 2,
-            seleted: true,
             exercises: [
-                { english: "Yes", hangul: "네" },
-                { english: "No", hangul: "아니요" }
+                { english: "Yes", hangul: "네", seleted: true },
+                { english: "No", hangul: "아니요", seleted: true }
+            ],
+            sideExercises: [
+                { english: "Here you go", hangul: "여기요", seleted: true },
             ]
         },
         {
             lessonNumber: 3,
-            seleted: false,
             exercises: [
-                { english: "Stay in peace", hangul: "안녕히 계세요" },
-                { english: "Go in peace", hangul: "안녕히 가세요" }
+                { english: "Stay in peace", hangul: "안녕히 계세요", seleted: false },
+                { english: "Go in peace", hangul: "안녕히 가세요", seleted: false }
             ]
         },
         {
             lessonNumber: 4,
-            seleted: false,
             exercises: [
-                { english: "I'm sorry", hangul: "죄송합니다" },
-                { english: "Excuse me", hangul: "저기요" }
+                { english: "I'm sorry", hangul: "죄송합니다", seleted: false },
+                { english: "Excuse me", hangul: "저기요", seleted: false }
             ]
         },
         {
             lessonNumber: 5,
-            seleted: false,
             exercises: [
-                { english: "It's me", hangul: "저예요" },
-                { english: "What is it?", hangul: "뭐여요" }
+                { english: "It's me", hangul: "저예요", seleted: false },
+                { english: "What is it?", hangul: "뭐여요", seleted: false }
             ]
         }
     ]
+    
+    const setLessons = (lessons: DictionaryLesson[]) => {
+        _setLessons(lessons)
+        console.log("lessons:",lessons)
+        localStorage.setItem("lessons", JSON.stringify(lessons))
+    }
+
+    const initial = (): DictionaryLesson[] => {
+        const lessonsJsonString = localStorage.getItem("lessons")
+        return lessonsJsonString ? JSON.parse(lessonsJsonString) : _lessons
+    }
 
     const [status, setStatus] = useState<ExerciseProgramStatus>(ExerciseProgramStatus.Setup)
-    const [lessons, setLessons] = useState(_lessons)
+    const [lessons, _setLessons] = useState(initial())
     const [front, setFront] = useState(false)
     const [showLessonsOverview, setShowLessonsOverview] = useState(false)
     const [toDoExercises, setToDoExercises] = useState<Array<DictionaryExercise>>([])
     const [totalNumbersOfExercises, setTotalNumbersOfExercises] = useState(0);
     const [currentExercise, setCurrentExercise] = useState<DictionaryExercise | undefined>(undefined)
+
+    const Lesson = ({lesson}: {lesson: DictionaryLesson}) => {
+        const firstExercises = lesson.exercises.slice(0, 2).map(exercise => exercise.english).join(" | ")
+        
+        const indeterminateCheck = (): boolean => {
+            const seletedExercisesLength = lesson.exercises.filter(exercise => exercise.seleted).length
+            return 0 < seletedExercisesLength && seletedExercisesLength < lesson.exercises.length
+        }
+
+        return <span key={lesson.lessonNumber} className="lessonItem">
+            <span className="lessonItemMain">
+                <Checkbox
+                    indeterminate={indeterminateCheck()}
+                    checked={lesson.exercises.some(exercise => exercise.seleted)}
+                    data-lesson-number={lesson.lessonNumber}
+                    onChange={changeLessonCheckbox}
+                />
+                <p>Lesson {lesson.lessonNumber}: {firstExercises}</p>
+            </span>
+            <span className="subItems">
+                {
+                    lesson.exercises.map((exercise, index) => {
+                        return <span key={index} className="subItem">
+                            <SubdirectoryArrowRightIcon className="subIcon" />
+                            <Checkbox
+                                checked={exercise.seleted}
+                                data-lesson-number={lesson.lessonNumber}
+                                data-exercise-english-word={exercise.english}
+                                onChange={changeExercisesCheckbox}
+                            />
+                            <p>{exercise.english}</p>
+                        </span>
+                    })
+                }
+            </span>
+        </span>
+    }
 
     const openLessonsOverview = () => {
         setShowLessonsOverview(true);
@@ -86,13 +134,17 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
     };
 
     const makeExercisesReady = () => {
-        const exercises = lessons.filter(lesson => lesson.seleted).flatMap(lesson => lesson.exercises)
+        const exercises = lessons.flatMap(lesson => lesson.exercises).filter(exercise => exercise.seleted)
         setToDoExercises(exercises)
         setTotalNumbersOfExercises(exercises.length)
         setStatus(ExerciseProgramStatus.FetchFirstExercises)
     }
 
-    const fetchNextExercise = () => {
+    const fetchNextExercise = async () => {
+        if (front) {
+            setFront(false)
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
         if (toDoExercises.length === 0) {
             setProgramStatus(ProgramStatus.Done)
         }
@@ -104,14 +156,28 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
         }
     }
 
-    const changeCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const changeLessonCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
         const localLessons = [...lessons]
         const lessonNumber = event?.target.parentElement?.parentElement?.getAttribute("data-lesson-number")
-        const checked = event?.target.checked
-        if (!lessonNumber || typeof checked !== "boolean") throw new Error("'lessonNumber' or 'checked' was not currect value");
+        const checkedValue = event?.target.checked
+        if (!lessonNumber || typeof checkedValue !== "boolean") throw new Error("'lessonNumber' or 'checked' was not currect value");
         const lessonToChange = localLessons.find(lesson => lesson.lessonNumber === parseInt(lessonNumber) )
         if (!lessonToChange) throw new Error("Could not find lesson by lessonNumber");
-        lessonToChange.seleted = checked
+        lessonToChange.exercises.map(exercise => exercise.seleted = checkedValue)
+        setLessons(localLessons)
+    }
+
+    const changeExercisesCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const localLessons = [...lessons]
+        const lessonNumber = event?.target.parentElement?.parentElement?.getAttribute("data-lesson-number")
+        const englishWord = event?.target.parentElement?.parentElement?.getAttribute("data-exercise-english-word")
+        const checkedValue = event?.target.checked
+        if (!lessonNumber || !englishWord || typeof checkedValue !== "boolean") throw new Error("'lessonNumber', 'englishWord' or 'checked' was not currect value");
+        const lessonToChange = localLessons.find(lesson => lesson.lessonNumber === parseInt(lessonNumber) )
+        if (!lessonToChange) throw new Error("Could not find lesson by lessonNumber");
+        const exerciseToChange = lessonToChange.exercises.find(exercise => exercise.english === englishWord)
+        if (!exerciseToChange) throw new Error("Could not find exercise by englishWord");
+        exerciseToChange.seleted = checkedValue 
         setLessons(localLessons)
     }
 
@@ -123,20 +189,15 @@ const Exercise = ({ setProgramStatus }: ExerciseArg) => {
                 <h1>Pick lessons</h1>
                 <span className="lessons" >
                     {
-                        lessons.map(lesson => {
-                            const firstExercises = lesson.exercises.slice(0, 2).map(exercise => exercise.english).join(" | ")
-                            return <span key={lesson.lessonNumber} className="lessonItem">
-                                <Checkbox checked={lesson.seleted} data-lesson-number={lesson.lessonNumber} onChange={changeCheckbox} /><p>Lesson {lesson.lessonNumber}: {firstExercises}</p>
-                            </span>
-                        })
+                        lessons.map(lesson => <Lesson lesson={lesson} />)
                     }
                 </span>
                 <Button variant="contained" onClick={closeLessonsOverview} >Back</Button>
             </Dialog>
             <h2>Current seleted:</h2>
-            <p>{lessons.filter(lesson => lesson.seleted).length} lessons.</p>
-            <p>{lessons.filter(lesson => lesson.seleted).flatMap(lesson => lesson.exercises).length} words.</p>
-            <Button className="goBtn" variant="contained" onClick={() => setStatus(ExerciseProgramStatus.MakeExercises)} disabled={!lessons.some(lesson => lesson.seleted)} >Go!</Button>
+            <p>{lessons.filter(lesson => lesson.exercises[0].seleted).length} lessons.</p>
+            <p>{lessons.filter(lesson => lesson.exercises[0].seleted).flatMap(lesson => lesson.exercises).length} words.</p>
+            <Button className="goBtn" variant="contained" onClick={() => setStatus(ExerciseProgramStatus.MakeExercises)} disabled={!lessons.some(lesson => lesson.exercises[0].seleted)} >Go!</Button>
         </>
     }
     else if (status === ExerciseProgramStatus.MakeExercises) {

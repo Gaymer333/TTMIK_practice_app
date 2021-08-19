@@ -115,12 +115,42 @@ html {
                     flex-grow: 1;
 
                     .lessonItem {
-                        display: flex;
+                        width: 100%;
+                        border-top: solid 1px #00000059;
 
-                        p {
-                            margin: 0;
+                        &:last-child {
+                            border-bottom: solid 1px #00000059;
+                        }
+
+                        .lessonItemMain {
                             display: flex;
-                            align-items: center;
+
+                            p {
+                                margin: 0;
+                                display: flex;
+                                align-items: center;
+                            }
+
+                        }
+
+                        .subItems {
+                            .subItem {
+                                display: flex;
+
+                                .MuiCheckbox-root {
+                                    padding-left: 7px;
+                                }
+
+                                .subIcon {
+                                    padding: 9px 0 9px 9px;
+                                }
+
+                                p {
+                                    margin: 0;
+                                    display: flex;
+                                    align-items: center;
+                                }
+                            }
                         }
                     }
                 }
